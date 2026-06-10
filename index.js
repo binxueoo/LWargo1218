@@ -6,7 +6,8 @@ const os = require('os');
 const fs = require("fs");
 const path = require("path");
 const { promisify } = require('util');
-const exec = promisify(require('child_process').exec);
+
+const CLOUDFLARED_PATH = '/usr/local/bin/cloudflared';
 const UPLOAD_URL = process.env.UPLOAD_URL || '';      // �ڵ�����Զ��ϴ���ַ,����д����Merge-sub��Ŀ�����ҳ��ַ,���磺https://merge.xxx.com
 const PROJECT_URL = process.env.PROJECT_URL || '';    // ��Ҫ�ϴ����Ļ򱣻�ʱ����д��Ŀ�����url,���磺https://google.com
 const AUTO_ACCESS = process.env.AUTO_ACCESS || false; // false�ر��Զ����true����,��ͬʱ��дPROJECT_URL����
@@ -15,11 +16,11 @@ const SUB_PATH = process.env.SUB_PATH || 'sub';       // ����·��
 const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;        // http�����Ķ˿�
 const UUID = process.env.UUID || '9afd1229-b893-40c1-84dd-51e7ce204913'; // ʹ����߸v1,�ڲ�ͬ��ƽ̨�������޸�UUID,����Ḳ��
 const NEZHA_SERVER = process.env.NEZHA_SERVER || '';        // ��߸v1��д��ʽ: nz.abc.com:8008  ��߸v0��д��ʽ��nz.abc.com
-const NEZHA_PORT = process.env.NEZHA_PORT || '';            // ʹ����߸v1����գ���߸v0����д
+const NEZHA_PORT = process.env.NEZHA_PORT || '';            // ʹ����߸v1�����գ���߸v0����д
 const NEZHA_KEY = process.env.NEZHA_KEY || '';              // ��߸v1��NZ_CLIENT_SECRET����߸v0��agent��Կ
-let ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';          // �̶��������,��ռ�������ʱ���
-let ARGO_AUTH = process.env.ARGO_AUTH || '';              // �̶������Կjson��token,��ռ�������ʱ���,json��ȡ��ַ��https://json.zone.id
-let ARGO_PORT = process.env.ARGO_PORT || 8001;            // �̶�����˿�,ʹ��token����cloudflare��̨���ú�����һ��
+let ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';          // �̶���������,���ռ�������ʱ����
+let ARGO_AUTH = process.env.ARGO_AUTH || '';              // �̶�������Կjson��token,���ռ�������ʱ����,json��ȡ��ַ��https://json.zone.id
+let ARGO_PORT = process.env.ARGO_PORT || 8001;            // �̶������˿�,ʹ��token����cloudflare��̨���ú�����һ��
 const CFIP = process.env.CFIP || 'saas.sin.fan';            // �ڵ���ѡ��������ѡip  
 const CFPORT = process.env.CFPORT || 443;                   // �ڵ���ѡ��������ѡip��Ӧ�Ķ˿�
 const NAME = process.env.NAME || '';                        // �ڵ�����
@@ -287,7 +288,7 @@ uuid: ${UUID}`;
   }
 
   // ����cloud-fared
-  if (fs.existsSync(botPath)) {
+  if (fs.existsSync(botPath) || fs.existsSync(CLOUDFLARED_PATH)) {
     let args;
 
     if (ARGO_AUTH.match(/^[A-Z0-9a-z=]{120,250}$/)) {
@@ -299,7 +300,7 @@ uuid: ${UUID}`;
     }
 
     try {
-      await exec(`nohup ${botPath} ${args} >/dev/null 2>&1 &`);
+      const cfPath = fs.existsSync(botPath) ? botPath : CLOUDFLARED_PATH;\n      await exec(`nohup ${cfPath} ${args} >/dev/null 2>&1 &`);
       console.log(`${botName} is running`);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
@@ -324,7 +325,12 @@ function getFilesForArchitecture(architecture) {
     ];
   }
 
-  if (NEZHA_SERVER && NEZHA_KEY) {
+  
+  // Use pre-installed cloudflared if available
+  if (fs.existsSync(CLOUDFLARED_PATH)) {
+    botPath = CLOUDFLARED_PATH;
+  }
+if (NEZHA_SERVER && NEZHA_KEY) {
     if (NEZHA_PORT) {
       const npmUrl = architecture === 'arm'
         ? "https://arm64.ssss.nyc.mn/agent"
@@ -347,7 +353,7 @@ function getFilesForArchitecture(architecture) {
   return baseFiles;
 }
 
-// ��ȡ�̶����json
+// ��ȡ�̶�����json
 async function waitForEnvVars() {\n  for (let i = 0; i < 60; i++) {\n    if (process.env.ARGO_AUTH && process.env.ARGO_DOMAIN) {\n      ARGO_AUTH = process.env.ARGO_AUTH;\n      ARGO_DOMAIN = process.env.ARGO_DOMAIN;\n      console.log("ARGO_AUTH and ARGO_DOMAIN loaded after retry");\n      return true;\n    }\n    await new Promise(r => setTimeout(r, 1000));\n  }\n  console.log("ARGO_AUTH or ARGO_DOMAIN still empty after 60s, using quick tunnels");\n  return false;\n}\n\nfunction argoType() {
   if (!ARGO_AUTH || !ARGO_DOMAIN) {
     console.log("ARGO_DOMAIN or ARGO_AUTH is empty, use quick tunnels");
@@ -386,7 +392,7 @@ async function waitForEnvVars() {\n  for (let i = 0; i < 60; i++) {\n    if (pro
   }
 }
 
-// ��ȡ��ʱ���domain
+// ��ȡ��ʱ����domain
 async function extractDomains() {
   let argoDomain;
 
@@ -429,7 +435,7 @@ async function extractDomains() {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const args = `tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile ${FILE_PATH}/boot.log --loglevel info --url http://localhost:${ARGO_PORT}`;
         try {
-          await exec(`nohup ${botPath} ${args} >/dev/null 2>&1 &`);
+          const cfPath = fs.existsSync(botPath) ? botPath : CLOUDFLARED_PATH;\n      await exec(`nohup ${cfPath} ${args} >/dev/null 2>&1 &`);
           console.log(`${botName} is running`);
           await new Promise((resolve) => setTimeout(resolve, 3000));
           await extractDomains();
