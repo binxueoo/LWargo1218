@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+?#!/usr/bin/env node
 
 const http = require("http");
 const axios = require("axios");
@@ -7,24 +7,24 @@ const fs = require("fs");
 const path = require("path");
 const { promisify } = require('util');
 const exec = promisify(require('child_process').exec);
-const UPLOAD_URL = process.env.UPLOAD_URL || '';      // 节点或订阅自动上传地址,需填写部署Merge-sub项目后的首页地址,例如：https://merge.xxx.com
-const PROJECT_URL = process.env.PROJECT_URL || '';    // 需要上传订阅或保活时需填写项目分配的url,例如：https://google.com
-const AUTO_ACCESS = process.env.AUTO_ACCESS || false; // false关闭自动保活，true开启,需同时填写PROJECT_URL变量
-const FILE_PATH = process.env.FILE_PATH || '.tmp';   // 运行目录,sub节点文件保存目录
-const SUB_PATH = process.env.SUB_PATH || 'sub';       // 订阅路径
-const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;        // http服务订阅端口
-const UUID = process.env.UUID || '9afd1229-b893-40c1-84dd-51e7ce204913'; // 使用哪吒v1,在不同的平台运行需修改UUID,否则会覆盖
-const NEZHA_SERVER = process.env.NEZHA_SERVER || '';        // 哪吒v1填写形式: nz.abc.com:8008  哪吒v0填写形式：nz.abc.com
-const NEZHA_PORT = process.env.NEZHA_PORT || '';            // 使用哪吒v1请留空，哪吒v0需填写
-const NEZHA_KEY = process.env.NEZHA_KEY || '';              // 哪吒v1的NZ_CLIENT_SECRET或哪吒v0的agent密钥
-let ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';          // 固定隧道域名,留空即启用临时隧道
-let ARGO_AUTH = process.env.ARGO_AUTH || '';              // 固定隧道密钥json或token,留空即启用临时隧道,json获取地址：https://json.zone.id
-let ARGO_PORT = process.env.ARGO_PORT || 8001;            // 固定隧道端口,使用token需在cloudflare后台设置和这里一致
-const CFIP = process.env.CFIP || 'saas.sin.fan';            // 节点优选域名或优选ip  
-const CFPORT = process.env.CFPORT || 443;                   // 节点优选域名或优选ip对应的端口
-const NAME = process.env.NAME || '';                        // 节点名称
+const UPLOAD_URL = process.env.UPLOAD_URL || '';      // �ڵ�����Զ��ϴ���ַ,����д����Merge-sub��Ŀ�����ҳ��ַ,���磺https://merge.xxx.com
+const PROJECT_URL = process.env.PROJECT_URL || '';    // ��Ҫ�ϴ����Ļ򱣻�ʱ����д��Ŀ�����url,���磺https://google.com
+const AUTO_ACCESS = process.env.AUTO_ACCESS || false; // false�ر��Զ����true����,��ͬʱ��дPROJECT_URL����
+const FILE_PATH = process.env.FILE_PATH || '.tmp';   // ����Ŀ¼,sub�ڵ��ļ�����Ŀ¼
+const SUB_PATH = process.env.SUB_PATH || 'sub';       // ����·��
+const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;        // http�����Ķ˿�
+const UUID = process.env.UUID || '9afd1229-b893-40c1-84dd-51e7ce204913'; // ʹ����߸v1,�ڲ�ͬ��ƽ̨�������޸�UUID,����Ḳ��
+const NEZHA_SERVER = process.env.NEZHA_SERVER || '';        // ��߸v1��д��ʽ: nz.abc.com:8008  ��߸v0��д��ʽ��nz.abc.com
+const NEZHA_PORT = process.env.NEZHA_PORT || '';            // ʹ����߸v1����գ���߸v0����д
+const NEZHA_KEY = process.env.NEZHA_KEY || '';              // ��߸v1��NZ_CLIENT_SECRET����߸v0��agent��Կ
+let ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';          // �̶��������,��ռ�������ʱ���
+let ARGO_AUTH = process.env.ARGO_AUTH || '';              // �̶������Կjson��token,��ռ�������ʱ���,json��ȡ��ַ��https://json.zone.id
+let ARGO_PORT = process.env.ARGO_PORT || 8001;            // �̶�����˿�,ʹ��token����cloudflare��̨���ú�����һ��
+const CFIP = process.env.CFIP || 'saas.sin.fan';            // �ڵ���ѡ��������ѡip  
+const CFPORT = process.env.CFPORT || 443;                   // �ڵ���ѡ��������ѡip��Ӧ�Ķ˿�
+const NAME = process.env.NAME || '';                        // �ڵ�����
 
-// 创建运行文件夹
+// ���������ļ���
 if (!fs.existsSync(FILE_PATH)) {
   fs.mkdirSync(FILE_PATH);
   console.log(`${FILE_PATH} is created`);
@@ -32,7 +32,7 @@ if (!fs.existsSync(FILE_PATH)) {
   console.log(`${FILE_PATH} already exists`);
 }
 
-// 生成随机6位字符
+// �������6λ�ַ�
 function generateRandomName() {
   const characters = 'abcdefghijklmnopqrstuvwxyz';
   let result = '';
@@ -42,7 +42,7 @@ function generateRandomName() {
   return result;
 }
 
-// 全局常量
+// ȫ�ֳ���
 let subContent = null;
 const npmName = generateRandomName();
 const webName = generateRandomName();
@@ -57,7 +57,7 @@ let listPath = path.join(FILE_PATH, 'list.txt');
 let bootLogPath = path.join(FILE_PATH, 'boot.log');
 let configPath = path.join(FILE_PATH, 'config.json');
 
-// 如果订阅器上存在历史运行节点则先删除
+// ����������ϴ�����ʷ���нڵ�����ɾ��
 function deleteNodes() {
   try {
     if (!UPLOAD_URL) return;
@@ -89,7 +89,7 @@ function deleteNodes() {
   }
 }
 
-// 清理历史文件
+// ������ʷ�ļ�
 function cleanupOldFiles() {
   try {
     const files = fs.readdirSync(FILE_PATH);
@@ -101,15 +101,15 @@ function cleanupOldFiles() {
           fs.unlinkSync(filePath);
         }
       } catch (err) {
-        // 忽略所有错误，不记录日志
+        // �������д��󣬲���¼��־
       }
     });
   } catch (err) {
-    // 忽略所有错误，不记录日志
+    // �������д��󣬲���¼��־
   }
 }
 
-// 生成xr-ay配置文件
+// ����xr-ay�����ļ�
 async function generateConfig() {
   const config = {
     log: { access: '/dev/null', error: '/dev/null', loglevel: 'none' },
@@ -126,7 +126,7 @@ async function generateConfig() {
   fs.writeFileSync(path.join(FILE_PATH, 'config.json'), JSON.stringify(config, null, 2));
 }
 
-// 判断系统架构
+// �ж�ϵͳ�ܹ�
 function getSystemArchitecture() {
   const arch = os.arch();
   if (arch === 'arm' || arch === 'arm64' || arch === 'aarch64') {
@@ -136,7 +136,7 @@ function getSystemArchitecture() {
   }
 }
 
-// 下载对应系统架构的依赖文件
+// ���ض�Ӧϵͳ�ܹ��������ļ�
 function downloadFile(fileName, fileUrl, callback) {
   const filePath = fileName;
 
@@ -174,7 +174,7 @@ function downloadFile(fileName, fileUrl, callback) {
     });
 }
 
-// 下载并运行依赖文件
+// ���ز����������ļ�
 async function downloadFilesAndRun() {
   const architecture = getSystemArchitecture();
   const filesToDownload = getFilesForArchitecture(architecture);
@@ -220,7 +220,7 @@ async function downloadFilesAndRun() {
   const filesToAuthorize = NEZHA_PORT ? [npmPath, webPath, botPath] : [phpPath, webPath, botPath];
   authorizeFiles(filesToAuthorize);
 
-  // 运行ne-zha
+  // ����ne-zha
   if (NEZHA_SERVER && NEZHA_KEY) {
     if (!NEZHA_PORT) {
       const port = NEZHA_SERVER.includes(':') ? NEZHA_SERVER.split(':').pop() : '';
@@ -276,7 +276,7 @@ uuid: ${UUID}`;
     console.log('NEZHA variable is empty,skip running');
   }
 
-  // 运行xr-ay
+  // ����xr-ay
   const command1 = `nohup ${webPath} -c ${FILE_PATH}/config.json >/dev/null 2>&1 &`;
   try {
     await exec(command1);
@@ -286,7 +286,7 @@ uuid: ${UUID}`;
     console.error(`web running error: ${error}`);
   }
 
-  // 运行cloud-fared
+  // ����cloud-fared
   if (fs.existsSync(botPath)) {
     let args;
 
@@ -309,7 +309,7 @@ uuid: ${UUID}`;
   await new Promise((resolve) => setTimeout(resolve, 5000));
 }
 
-// 根据系统架构返回对应的url
+// ����ϵͳ�ܹ����ض�Ӧ��url
 function getFilesForArchitecture(architecture) {
   let baseFiles;
   if (architecture === 'arm') {
@@ -347,8 +347,8 @@ function getFilesForArchitecture(architecture) {
   return baseFiles;
 }
 
-// 获取固定隧道json
-function argoType() {
+// ��ȡ�̶����json
+async function waitForEnvVars() {\n  for (let i = 0; i < 60; i++) {\n    if (process.env.ARGO_AUTH && process.env.ARGO_DOMAIN) {\n      ARGO_AUTH = process.env.ARGO_AUTH;\n      ARGO_DOMAIN = process.env.ARGO_DOMAIN;\n      console.log("ARGO_AUTH and ARGO_DOMAIN loaded after retry");\n      return true;\n    }\n    await new Promise(r => setTimeout(r, 1000));\n  }\n  console.log("ARGO_AUTH or ARGO_DOMAIN still empty after 60s, using quick tunnels");\n  return false;\n}\n\nfunction argoType() {
   if (!ARGO_AUTH || !ARGO_DOMAIN) {
     console.log("ARGO_DOMAIN or ARGO_AUTH is empty, use quick tunnels");
     return;
@@ -386,7 +386,7 @@ function argoType() {
   }
 }
 
-// 获取临时隧道domain
+// ��ȡ��ʱ���domain
 async function extractDomains() {
   let argoDomain;
 
@@ -422,7 +422,7 @@ async function extractDomains() {
               await exec(`pkill -f "[${botName.charAt(0)}]${botName.substring(1)}" > /dev/null 2>&1`);
             }
           } catch (error) {
-            // 忽略输出
+            // �������
           }
         }
         killBotProcess();
@@ -443,7 +443,7 @@ async function extractDomains() {
   }
 }
 
-// 获取isp信息
+// ��ȡisp��Ϣ
 async function getMetaInfo() {
   try {
     const response1 = await axios.get('https://api.ip.sb/geoip', { headers: { 'User-Agent': 'Mozilla/5.0', timeout: 3000 } });
@@ -463,7 +463,7 @@ async function getMetaInfo() {
   return 'Unknown';
 }
 
-// 生成 list 和 sub 信息
+// ���� list �� sub ��Ϣ
 async function generateLinks(argoDomain) {
   const ISP = await getMetaInfo();
   const nodeName = NAME ? `${NAME}-${ISP}` : ISP;
@@ -480,7 +480,7 @@ trojan://${UUID}@${CFIP}:${CFPORT}?security=tls&sni=${argoDomain}&fp=firefox&typ
       console.log(Buffer.from(subTxt).toString('base64'));
       fs.writeFileSync(subPath, Buffer.from(subTxt).toString('base64'));
       console.log(`${FILE_PATH}/sub.txt saved successfully`);
-      // 将订阅内容保存到全局变量，供 http 服务器使用
+      // ���������ݱ��浽ȫ�ֱ������� http ������ʹ��
       subContent = Buffer.from(subTxt).toString('base64');
       uploadNodes();
       resolve(subTxt);
@@ -488,7 +488,7 @@ trojan://${UUID}@${CFIP}:${CFPORT}?security=tls&sni=${argoDomain}&fp=firefox&typ
   });
 }
 
-// 自动上传节点或订阅
+// �Զ��ϴ��ڵ����
 async function uploadNodes() {
   if (UPLOAD_URL && PROJECT_URL) {
     const subscriptionUrl = `${PROJECT_URL}/${SUB_PATH}`;
@@ -543,7 +543,7 @@ async function uploadNodes() {
   }
 }
 
-// 90s后删除相关文件
+// 90s��ɾ������ļ�
 function cleanFiles() {
   setTimeout(() => {
     const filesToDelete = [bootLogPath, configPath, webPath, botPath];
@@ -571,7 +571,7 @@ function cleanFiles() {
 }
 cleanFiles();
 
-// 自动访问项目URL
+// �Զ�������ĿURL
 async function AddVisitTask() {
   if (!AUTO_ACCESS || !PROJECT_URL) {
     console.log("Skipping adding automatic access task");
@@ -594,10 +594,8 @@ async function AddVisitTask() {
   }
 }
 
-// 主运行逻辑
-async function startserver() {
-  try {
-    argoType();
+// �������߼�
+async function startserver() {\n  try {\n    await waitForEnvVars();\n    argoType();
     deleteNodes();
     cleanupOldFiles();
     await generateConfig();
@@ -612,17 +610,17 @@ startserver().catch(error => {
   console.error('Unhandled error in startserver:', error);
 });
 
-// 创建 http 服务器
+// ���� http ������
 const server = http.createServer(async (req, res) => {
   const urlPath = req.url.split('?')[0];
 
-  // 订阅路由
+  // ����·��
   if (urlPath === `/${SUB_PATH}`) {
     if (subContent) {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end(subContent);
     } else {
-      // 订阅内容尚未生成，尝试从文件读取
+      // ����������δ���ɣ����Դ��ļ���ȡ
       try {
         const fileContent = fs.readFileSync(subPath, 'utf-8');
         res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -635,7 +633,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 根路由: /
+  // ��·��: /
   if (urlPath === '/') {
     try {
       const filePath = path.join(__dirname, 'index.html');
@@ -654,3 +652,4 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => console.log(`http server is running on port:${PORT}!`));
+
