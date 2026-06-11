@@ -392,8 +392,11 @@ function argoType() {
   `;
     fs.writeFileSync(path.join(FILE_PATH, 'tunnel.yml'), tunnelYaml);
   } else {
+    // Write the token JSON to a credentials file
+    fs.writeFileSync(path.join(FILE_PATH, 'tunnel.json'), ARGO_AUTH);
     const tunnelYaml = `
   tunnel: ${ARGO_AUTH}
+  credentials-file: ${path.join(FILE_PATH, 'tunnel.json')}
   protocol: http2
 
   ingress:
