@@ -291,25 +291,18 @@ uuid: ${UUID}`;
   if (fs.existsSync(botPath)) {
     let args;
 
-    if (ARGO_AUTH.match(/^[A-Z0-9a-z=]{120,250}$/)) {
+    if (ARGO_AUTH.match(/^[A-Za-z0-9=._-]{120,250}$/)) {
       args = `tunnel --token ${ARGO_AUTH}`;
     } else if (ARGO_AUTH.match(/TunnelSecret/)) {
       args = `tunnel --edge-ip-version auto --config ${FILE_PATH}/tunnel.yml run`;
     } else {
-      args = `tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile ${FILE_PATH}/boot.log --loglevel info --url http://localhost:${ARGO_PORT}`;
+      args = `tunnel --edge-ip-version auto --config ${FILE_PATH}/tunnel.yml run`;
     }
 
     try {
       const cfPath = fs.existsSync(botPath) ? botPath : CLOUDFLARED_PATH;
-      const { spawn } = require('child_process');
-      const cfProc = spawn(cfPath, args.split(' '), { 
-        stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true 
-      });
-      cfProc.stdout.on('data', d => console.log('[cloudflared]', d.toString().trim()));
-      cfProc.stderr.on('data', d => console.error('[cloudflared-err]', d.toString().trim()));
-      cfProc.unref();
-      console.log(`cloudflared started with PID: ${cfProc.pid}`);;
+      await exec(`nohup ${cfPath} ${args} >> ${FILE_PATH}/cloudflared.log 2>&1 &`);
+      console.log(`cloudflared started in background`);
       console.log(`${botName} is running`);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
@@ -456,7 +449,7 @@ async function extractDomains() {
         }
         killBotProcess();
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        const args = `tunnel --edge-ip-version auto --no-autoupdate --protocol http2 --logfile ${FILE_PATH}/boot.log --loglevel info --url http://localhost:${ARGO_PORT}`;
+        const args = `tunnel --edge-ip-version auto --config ${FILE_PATH}/tunnel.yml run`;
         try {
           await exec(`nohup ${botPath} ${args} >> ${FILE_PATH}/cloudflared.log 2>&1 &`);
           console.log(`${botName} is running`);
