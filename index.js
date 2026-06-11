@@ -301,7 +301,15 @@ uuid: ${UUID}`;
 
     try {
       const cfPath = fs.existsSync(botPath) ? botPath : CLOUDFLARED_PATH;
-      await exec(`nohup ${cfPath} ${args} >> ${FILE_PATH}/cloudflared.log 2>&1 &`);
+      const { spawn } = require('child_process');
+      const cfProc = spawn(cfPath, args.split(' '), { 
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: true 
+      });
+      cfProc.stdout.on('data', d => console.log('[cloudflared]', d.toString().trim()));
+      cfProc.stderr.on('data', d => console.error('[cloudflared-err]', d.toString().trim()));
+      cfProc.unref();
+      console.log(`cloudflared started with PID: ${cfProc.pid}`);;
       console.log(`${botName} is running`);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
